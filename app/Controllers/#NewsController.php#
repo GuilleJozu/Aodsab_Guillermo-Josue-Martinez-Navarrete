@@ -1,0 +1,117 @@
+<?php
+
+namespace App\Controllers;
+
+use App\Controllers\BaseController;
+use App\Models\NewsModel;
+use Dompdf\Dompdf;
+
+class NewsController extends BaseController
+{
+    public function index()
+    {
+        $model = model(NewsModel::class);
+
+        $data = [
+            'title' => 'Noticias',
+            'news'  => $model->getNews()
+        ];
+
+        echo view('news/index', $data);
+    }
+
+    public function cards()
+    {
+        $model = model(NewsModel::class);
+
+        $data = [
+            'title' => 'Noticias en versiÃ³n CARD',
+            'news'  => $model->getNews()
+        ];
+
+        return view('news/cards', $data);
+    }
+
+    // AquÃ­ comienza la funciÃ³n create()
+    public function create() 
+    {
+        $model = model(NewsModel::class);
+
+        if ($this->request->getMethod() === 'post' && $this->validate([
+            'title' => 'required|min_length[3]|max_length[255]',
+            'body'  => 'required'
+        ])) {
+            
+
+            $data = [
+                'title' => $this->request->getPost('title'),
+                'slug'  => url_title($this->request->getPost('title'), '-', true),
+                'body'  => $this->request->getPost('body')
+            ];
+
+            $model->insert($data);
+
+            return redirect()->to('/news');
+        } else {
+            return view('/news/create');
+        }
+    }
+    // AquÃ­ finaliza la funciÃ³n create()
+
+
+    public function edit($id = null)
+    {
+        $model = NewsModel();
+
+    }
+
+    public function update()
+    {
+        $model = model(NewsModel::class);
+
+        $id = $this->request->getVar('id');
+
+        if ($this->request->getMethod() === 'put' && $this->validate([
+                'title' => 'required|min_length[3]|max_length[255]',
+                'body'  => 'required'
+            ])) {
+
+            $data = [
+                'title' => $this->request->getPost('title'),
+                'slug'  => url_title($this->request->getPost('title'), '-', true),
+                'body'  => $this->request->getPost('body')
+            ];
+
+            $model->update($id, $data);
+
+            return redirect()->to('/news');
+        } else {
+            return view('/news/edit');
+        }
+    }
+    
+    
+    public function pdf()
+    {
+        //
+    }
+
+
+    public function otroPDF()
+    {
+        $dompdf = new Dompdf();
+        $html = view('news/index');
+        $dompdf->loadHtml($html);
+
+        // (Optional) Setup the paper size and orientation
+        $dompdf->setPaper('A4', 'landscape');
+
+        // Render the HTML as PDF
+        $dompdf->render();
+
+        // Output the generated PDF to Browser
+        $dompdf->stream();
+    }
+    
+}
+
